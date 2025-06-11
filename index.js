@@ -20,6 +20,7 @@ async function run() {
   try {
     //Collections
     const usersCollection = client.db("statusSoulDB").collection("users");
+    const postsCollection = client.db("statusSoulDB").collection("posts");
     //All Requests
     //get a specific user
     app.get("/users", async (req, res) => {
@@ -50,6 +51,41 @@ async function run() {
         const result = await usersCollection.updateOne(filter, updateDoc);
         if (result.modifiedCount) {
           const result = await usersCollection.findOne(filter);
+          res.send(result);
+        }
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+
+    //posts
+    //get posts
+    app.get("/posts", async (req, res) => {
+      try {
+        const { email } = req.query;
+        const result = await postsCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+    app.get("/user-posts", async (req, res) => {
+      try {
+        const { email } = req.query;
+        const result = await postsCollection.find({ email }).toArray();
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+    //create a new post
+    app.post("/posts", async (req, res) => {
+      const { email } = req.query;
+      try {
+        const newPost = req.body;
+        const result = await postsCollection.insertOne(newPost);
+        if (result.insertedId) {
+          const result = await postsCollection.find({ email }).toArray();
           res.send(result);
         }
       } catch (error) {
