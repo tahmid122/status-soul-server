@@ -121,7 +121,35 @@ async function run() {
           updateDoc
         );
         res.send({ liked: isLiked ? false : true });
-      } catch (error) {}
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+    //set comments
+    app.patch("/posts/comment", async (req, res) => {
+      try {
+        const { id, email } = req.query;
+        const comment = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = { $push: { comments: comment } };
+        const result = await postsCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+    //delete a comment
+    app.delete("/posts/comment", async (req, res) => {
+      try {
+        const { email, postId, id } = req.query;
+        const query = { _id: new ObjectId(postId) };
+        const result = await postsCollection.updateOne(query, {
+          $pull: { comments: { id } },
+        });
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
     });
     //All Requests
     console.log(
