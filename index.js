@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qpgnftk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const app = express();
 const cors = require("cors");
@@ -91,6 +91,37 @@ async function run() {
       } catch (error) {
         res.send({ message: error.message });
       }
+    });
+    //delete posts
+    app.delete("/posts", async (req, res) => {
+      try {
+        const id = req.query.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await postsCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+    //update like
+    app.patch("/posts/like", async (req, res) => {
+      try {
+        const { id, email } = req.query;
+        const post = await postsCollection.findOne({ _id: new ObjectId(id) });
+        const isLiked = post.likedBy.includes(email);
+        const updateDoc = isLiked
+          ? {
+              $pull: { likedBy: email },
+            }
+          : {
+              $push: { likedBy: email },
+            };
+        const result = await postsCollection.updateOne(
+          { _id: new ObjectId(id) },
+          updateDoc
+        );
+        res.send({ liked: isLiked ? false : true });
+      } catch (error) {}
     });
     //All Requests
     console.log(
